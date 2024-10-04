@@ -132,3 +132,46 @@ results (write and read):
 a0b1c2d3e4 (3, 127, 7f)  ->  a0b1c27fe4
 a0b1c2d3e4 (3)  ->  11010011
 
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+Oh, I've just clicked: user settings can be stored in a binary form, because user settings is exactly one byte. 
+
+reading:
+
+	private static String read_user_settings(int user_id) {
+
+		String file_name = "user_settings_file_name";
+		try (FileInputStream fis = new FileInputStream(file_name)) {
+			byte[] bytes = fis.readAllBytes();
+			String u_s = Integer.toBinaryString (bytes[user_id]);
+			return u_s;
+		} catch (IOException e) {
+			// handle errors here
+		}
+
+	}
+
+
+writing:
+
+	private static void write_user_settings(int user_id, String user_settings) {
+
+		String file_name = "user_settings_file_name";
+		try (FileInputStream fis = new FileInputStream(file_name)) {
+			byte[]	bytes	= fis.readAllBytes();
+			int		u_s_int	= Integer.parseInt(user_settings, 2);
+			bytes[user_id]	= (byte) u_s_int;
+			try (FileOutputStream fos = new FileOutputStream(file_name)){
+				fos.write(bytes);
+			} catch (IOException e) {
+				// handle errors here
+			}
+		} catch (IOException e) {
+			// handle errors here
+		}
+
+	}
+
+
+
