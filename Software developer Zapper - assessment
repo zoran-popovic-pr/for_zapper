@@ -1,0 +1,134 @@
+
+Question 1 - Database Design
+
+CREATE TABLE IF NOT EXISTS schema_name.transaction_track
+(
+    id							serial			NOT NULL,
+    customer_id					integer			NOT NULL,		-- points to the customer table
+    merchants_id				integer			NOT NULL,		-- points to the merchants table
+	amount						numeric(15,2)	NOT NULL,
+	user_id						integer			NOT NULL,
+--	...															   other fields that might be required
+    date_time_stamp_start		integer			NOT NULL,		-- if required for multi-step and lengthy transactions
+    date_time_stamp_end			integer			NOT NULL,		-- if required for multi-step and lengthy transactions
+    is_complete					boolean			NOT NULL,		-- if required for multi-step and lengthy transactions
+    CONSTRAINT transaction_track_pkey PRIMARY KEY (id)
+)
+
+
+
+
+Question 2.1 Checking if a feature is enabled
+
+		/*
+		Test cases:
+		Input: settings = 00000000, setting = 7		 Output: false
+		Input: settings = 00000010, setting = 7		 Output: true
+		Input: settings = 11111111, setting = 4		 Output: true		
+		*/
+
+//	calls:
+
+		if (!is_feature_enabled("00000001",7)) {
+			System.out.println("functionality not allowed, further processing is stopped");
+		} else {
+			System.out.println("functionality allowed");
+		}
+
+		if (!is_feature_enabled("00000010",7)) {
+			System.out.println("functionality not allowed, further processing is stopped");
+		} else {
+			System.out.println("functionality allowed");
+		}
+
+		if (!is_feature_enabled("11111111",4)) {
+			System.out.println("functionality not allowed, further processing is stopped");
+		} else {
+			System.out.println("functionality allowed");
+		}
+
+	
+	private static boolean is_feature_enabled(String user_setting, int feature_id) {
+		return user_setting.substring(feature_id - 1, feature_id).equals("1");
+	}
+
+
+results:
+functionality not allowed, further processing is stopped
+functionality allowed
+functionality allowed
+
+
+
+
+Question 2.2 Storing user settings
+
+/*
+		the least-possible-size file must only contain concatenated string of each user's settings as 2 hex digits (8 binary digits),
+		knowing that user id is a sequence number (0 based) of the hex digit pair within the string
+		assumptions:
+		1. user's id does not exceed the number of pairs in the file
+		2. settings for all deleted or disabled users are still in the file (no 'gaps'),
+			assuming that these users will be only a few, otherwise user id (e.g. 1a2b3c4d) must also be in the file for each user
+*/
+
+
+
+//	this is used as test samples to call the required functions (methods), but it would normally be retrieved elsewhere:
+
+		int		user_id			= 3;
+		String	user_settings	= "01111111";
+
+//	calls:
+
+		write_user_settings(user_id, user_settings);
+		String x = read_user_settings(user_id);
+
+
+//	functions:
+
+	private static void write_user_settings(int user_id, String user_settings) {
+
+//		if (!Files.exists(Paths.get("user_settings_file_name"))) {													// not used here, just to show what would be used
+//			// must not happen, controlled before the call
+//			return;
+//		}
+		
+//		try {
+//			char[] data = new String(Files.readAllBytes(Paths.get("user_settings_file_name"))).toCharArray ();		// not used here, just to show what would be used
+			String	file_data_old	= "a0b1c2d3e4";																	// instead of data from the file
+
+			int		u_s_int			= Integer.parseInt(user_settings, 2);
+			String	u_s_hex			= Integer.toHexString(u_s_int);
+			String	file_data_new	= file_data_old.substring (0, user_id * 2) +
+									  u_s_hex +
+									  file_data_old.substring (user_id * 2 + 2);
+
+			System.out.println(file_data_old + " (" + user_id + ", " + u_s_int + ", " + u_s_hex + ")  ->  " + file_data_new);
+
+//			Files.writeString(Paths.get("user_settings_file_name"), file_data_new);									// not used here, just to show what would be used
+			
+//		} catch (IOException ex) {
+			 // handle this problem here !!!		
+//		}
+
+	}
+
+	private static String read_user_settings(int user_id) {
+
+//		char[] file_data = new String(Files.readAllBytes(Paths.get("user_settings_file_name"))).toCharArray ();		// not used here, must be within try & catch
+		String	file_data	= "a0b1c2d3e4";																			// instead of data from the file
+
+		int		u_s_int = Integer.parseInt(file_data.substring (user_id * 2, user_id * 2 + 2), 16);
+		String	u_s_bin = Integer.toBinaryString (u_s_int);
+
+		System.out.println(file_data + " (" + user_id + ")  ->  " + u_s_bin);
+
+		return u_s_bin;
+	}
+
+
+results (write and read):
+a0b1c2d3e4 (3, 127, 7f)  ->  a0b1c27fe4
+a0b1c2d3e4 (3)  ->  11010011
+
